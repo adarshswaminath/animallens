@@ -3,48 +3,54 @@
 import React from "react";
 import { HiMenuAlt1 } from "react-icons/hi";
 import Link from "next/link";
-import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import Image from "next/image";
+import { signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut } from "firebase/auth";
 import { auth } from "../firebase/config";
 import { useAuth } from "../context/AuthContext";
 
 export default function Navbar() {
   const { user } = useAuth();
+
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
     } catch (err) {
-      console.log(err);
+      console.log("Error signing in:", err);
     }
   };
 
-  const signOut = () => {
-    auth.signOut();
+  const signOut = async () => {
+    try {
+      await firebaseSignOut(auth);
+    } catch (err) {
+      console.log("Error signing out:", err);
+    }
   };
 
   const menuItems = (
     <>
-      <li>
+      <li className="p-2">
         <Link href="/">Home</Link>
       </li>
-      <li>
+      <li className="p-2">
         <Link href="/image-upload">Upload</Link>
       </li>
-      <li>
+      <li className="p-2">
         <Link href="/profile">Profile</Link>
       </li>
-      <li>
+      <li className="p-2">
         {user ? (
           <button
             onClick={signOut}
-            className="flex items-center justify-center  bg-gray-900 rounded-full w-32 text-white hover:text-gray-900"
+            className="btn flex items-center justify-center bg-gray-900 rounded-full w-32 text-white hover:text-gray-900"
           >
-            Sign Out {user.email}
+            Sign Out
           </button>
         ) : (
           <button
             onClick={signInWithGoogle}
-            className="flex items-center justify-center  bg-gray-900 rounded-full w-32 text-white hover:text-gray-900"
+            className="flex items-center justify-center bg-gray-900 rounded-full w-32 text-white hover:text-gray-900"
           >
             Sign In
           </button>
@@ -55,30 +61,48 @@ export default function Navbar() {
 
   return (
     <div>
-      <div className="navbar lg:px-20">
-        <div className="navbar-start">
-          <div className="dropdown">
-            <div
-              tabIndex={0}
-              role="button"
-              className="btn bg-transparent shadow-none border-none hover:bg-transparent lg:hidden"
-            >
-              <HiMenuAlt1 className="text-2xl" />
-            </div>
-            <ul
-              tabIndex={0}
-              className="menu menu-sm dropdown-content bg-[#FFE7CF] rounded-box z-[1] mt-3 w-52 p-2 text-gray-900 shadow"
-            >
-              {menuItems}
-            </ul>
-          </div>
-          <a className="text-4xl font-bold lg:text-6xl font-whisper">petcare</a>
+      <div className="navbar px-16">
+        <div className="flex-1">
+          <Link href="/" className=" text-6xl font-whisper">Petscare</Link>
         </div>
-        <div className="navbar-end hidden lg:flex items-center">
-          <ul className="menu menu-horizontal px-1">{menuItems}</ul>
+        <div className="flex-none">
+          {user ? (
+            <div className="dropdown dropdown-end">
+              <div
+                tabIndex={0}
+                role="button"
+                className="btn btn-ghost btn-circle "
+              >
+                <div className="w-auto rounded-full btn bg-[#FEFAF8]">
+                  <Image
+                    alt="User Avatar"
+                    src={user.photoURL || "/default-avatar.png"}
+                    className="h-8 w-8 rounded-full"
+                    height={100}
+                    width={100}
+                  />
+                  <span>{user.displayName}</span>
+               
+                </div>
+              </div>
+              <ul
+                tabIndex={0}
+                className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
+              >
+                {menuItems}
+              </ul>
+            </div>
+          ) : (
+            <button
+              onClick={signInWithGoogle}
+              className="px-6 py-2 bg-gray-900 text-white rounded-full"
+            >
+              Sign In
+            </button>
+          )}
         </div>
       </div>
-      {/* hr line */}
+      {/* Horizontal line */}
       <div className="lg:px-16">
         <hr className="border-gray-900 h-3" />
       </div>
