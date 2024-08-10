@@ -1,17 +1,18 @@
 import React from "react";
 import { HiMenuAlt1 } from "react-icons/hi";
+import Link from "next/link";
 
 export default function Navbar() {
   const menuItems = (
     <>
       <li>
-        <a>Home</a>
+        <Link href="/">Home</Link>
       </li>
       <li>
-        <a>Upload</a>
+        <Link href="/image-upload">Upload</Link>
       </li>
       <li>
-        <a>Profile</a>
+        <Link href="/profile">Profile</Link>
       </li>
       <li>
         <a className="flex items-center justify-center  bg-gray-900 rounded-full w-32 text-white hover:text-gray-900">
