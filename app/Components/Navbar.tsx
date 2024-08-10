@@ -1,8 +1,27 @@
+"use client";
+
 import React from "react";
 import { HiMenuAlt1 } from "react-icons/hi";
 import Link from "next/link";
+import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { auth } from "../firebase/config";
+import { useAuth } from "../context/AuthContext";
 
 export default function Navbar() {
+  const { user } = useAuth();
+  const signInWithGoogle = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const signOut = () => {
+    auth.signOut();
+  };
+
   const menuItems = (
     <>
       <li>
@@ -15,9 +34,21 @@ export default function Navbar() {
         <Link href="/profile">Profile</Link>
       </li>
       <li>
-        <a className="flex items-center justify-center  bg-gray-900 rounded-full w-32 text-white hover:text-gray-900">
-          Sign Up
-        </a>
+        {user ? (
+          <button
+            onClick={signOut}
+            className="flex items-center justify-center  bg-gray-900 rounded-full w-32 text-white hover:text-gray-900"
+          >
+            Sign Out {user.email}
+          </button>
+        ) : (
+          <button
+            onClick={signInWithGoogle}
+            className="flex items-center justify-center  bg-gray-900 rounded-full w-32 text-white hover:text-gray-900"
+          >
+            Sign In
+          </button>
+        )}
       </li>
     </>
   );

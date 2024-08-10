@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 .font-whisper {
-    font-family: "Whisper", cursive;
+  font-family: var(--font-whisper);
     font-weight: 400;
     /* font-size: 5rem; */
     /* font-style: normal; */
