@@ -1,5 +1,10 @@
 export default function Home() {
   return (
-    <div>Home</div>
+    <div>
+      <div className="min-h-screen">Home</div>
+      <div className="min-h-screen bg-black"></div>
+      <div className="min-h-screen">Home</div>
+
+    </div>
   )
 }
