@@ -3,7 +3,6 @@
 import React from "react";
 import { HiMenuAlt1 } from "react-icons/hi";
 import Link from "next/link";
-import Image from "next/image";
 import { signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut } from "firebase/auth";
 import { auth } from "../firebase/config";
 import { useAuth } from "../context/AuthContext";
@@ -74,12 +73,10 @@ export default function Navbar() {
                 className="btn btn-ghost btn-circle "
               >
                 <div className="w-auto rounded-full btn bg-[#FEFAF8]">
-                  <Image
+                  <img
                     alt="User Avatar"
                     src={user.photoURL || "/default-avatar.png"}
                     className="h-8 w-8 rounded-full"
-                    height={100}
-                    width={100}
                   />
                   <span>{user.displayName}</span>
                
