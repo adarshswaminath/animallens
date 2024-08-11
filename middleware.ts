@@ -7,7 +7,7 @@ export function middleware(request: NextRequest) {
   console.log(authCookie);
   // If there's no auth cookie and the user is trying to access /profile or /image-upload
   if (
-    !authCookie &&
+    authCookie &&
     (request.nextUrl.pathname === "/profile" ||
       request.nextUrl.pathname === "/image-upload")
   ) {
