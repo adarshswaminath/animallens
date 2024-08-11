@@ -62,7 +62,7 @@ export default function Navbar() {
     <div>
       <div className="navbar px-16">
         <div className="flex-1">
-          <Link href="/" className=" text-6xl font-whisper">Petscare</Link>
+          <Link href="/" className=" text-6xl font-whisper">AnimalLens</Link>
         </div>
         <div className="flex-none">
           {user ? (
