@@ -63,12 +63,20 @@ export default function ImageUpload() {
         let analysisData = result.message;
         analysisData = analysisData.replace(/```json|```/g, "").trim();
         const parsedAnalysis: AnimalAnalysis = JSON.parse(analysisData);
-        
-        // Check if all values are 'N/A'
-        if (
-          Object.values(parsedAnalysis).every(value => value === 'N/A')
-        ) {
-          setError("Please upload an animal image.");
+  
+        // Improved check for invalid or empty responses
+        const isInvalidResponse = Object.values(parsedAnalysis).every((value) => 
+          typeof value === 'string' && 
+          (value.trim().toLowerCase() === 'n/a' || 
+           value.trim().toLowerCase() === 'none' ||
+           value.trim() === '')
+        );
+  
+        console.log("Parsed Analysis:", parsedAnalysis);
+        console.log("Is Invalid Response:", isInvalidResponse);
+  
+        if (isInvalidResponse) {
+          setError("Please upload a valid animal image.");
           setAnalysis(null);
         } else {
           await storeAnalysisInFirebase(preview!, parsedAnalysis);
@@ -128,8 +136,10 @@ export default function ImageUpload() {
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
                   <FiCamera className="w-16 h-16 mb-4 text-amber-200" />
                   <p className="mb-2 text-lg text-gray-900">
-                    <span className="font-semibold text-gray-900">Click to upload</span> or
-                    drag and drop
+                    <span className="font-semibold text-gray-900">
+                      Click to upload
+                    </span>{" "}
+                    or drag and drop
                   </p>
                   <p className="text-sm text-gray-900">PNG, JPG, or JPEG</p>
                 </div>
