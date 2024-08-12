@@ -5,6 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import { doc, getDoc, updateDoc, arrayRemove } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { FaTrash } from 'react-icons/fa';
+import ProfileData from './ProfileData';
 
 interface AnimalUpload {
   imageUrl: string;
@@ -55,6 +56,7 @@ export default function Profile() {
 
   return (
     <div className="container mx-auto p-4 min-h-screen">
+      <ProfileData totalUploads={uploads?.length}/>
       <h1 className="text-3xl font-bold mb-6">Your Animal Uploads</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {uploads.length > 0 ? (
