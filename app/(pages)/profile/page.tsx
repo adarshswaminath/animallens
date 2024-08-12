@@ -6,6 +6,8 @@ import { doc, getDoc, updateDoc, arrayRemove } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { FaTrash } from 'react-icons/fa';
 import ProfileData from './ProfileData';
+import Image from 'next/image';
+import { motion } from 'framer-motion';
 
 interface AnimalUpload {
   imageUrl: string;
@@ -24,19 +26,18 @@ interface AnimalUpload {
 export default function Profile() {
   const { user } = useAuth();
   const [uploads, setUploads] = useState<AnimalUpload[]>([]);
+  const [selectedAnimal, setSelectedAnimal] = useState<AnimalUpload | null>(null);
 
   useEffect(() => {
     if (user) {
       fetchUploads();
-
     }
-  }, []);
+  }, [user]);
 
   const fetchUploads = async () => {
     if (!user) return;
     const userDocRef = doc(db, 'users', user.uid);
     const userDoc = await getDoc(userDocRef);
-    console.log(userDoc)
     if (userDoc.exists()) {
       setUploads(userDoc.data().animalUploads || []);
     }
@@ -48,49 +49,105 @@ export default function Profile() {
     await updateDoc(userDocRef, {
       animalUploads: arrayRemove(upload),
     });
-    console.log(uploads)
     setUploads(uploads.filter((item) => item !== upload));
   };
 
-  if (!user) return <div>Please log in to view your profile.</div>;
+  const openModal = (upload: AnimalUpload) => {
+    setSelectedAnimal(upload);
+    const modal = document.getElementById('animal-modal');
+    if (modal) {
+      modal.classList.remove('hidden');
+    }
+  };
+
+  const closeModal = () => {
+    setSelectedAnimal(null);
+    const modal = document.getElementById('animal-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+    }
+  };
+
+  if (!user) return <div className="text-center text-gray-700">Please log in to view your profile.</div>;
 
   return (
     <div className="container mx-auto p-4 min-h-screen">
-      <ProfileData totalUploads={uploads?.length}/>
-      <h1 className="text-3xl font-bold mb-6">Your Animal Uploads</h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      <ProfileData totalUploads={uploads?.length} />
+      <h1 className="text-4xl font-bold text-center mb-8 text-gray-800">Your Upload History</h1>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
         {uploads.length > 0 ? (
           uploads.map((upload, index) => (
-            <div key={index} className="relative p-4 border rounded-lg shadow-md bg-white">
-              <img 
-                src={upload.imageUrl} 
-                alt="Uploaded animal" 
-                className="mb-2 w-full h-48 object-cover rounded-md" 
+            <motion.div
+              key={index}
+              className="relative p-4 border border-gray-200 rounded-lg shadow-lg bg-white hover:shadow-xl transition-shadow cursor-pointer"
+              whileHover={{ scale: 1.03 }}
+              onClick={() => openModal(upload)}
+            >
+              <Image
+                src={upload.imageUrl}
+                alt="Uploaded animal"
+                className="w-full h-48 object-cover rounded-md"
+                width={400}
+                height={300}
               />
-              <p className="text-sm text-gray-600">{new Date(upload.timestamp).toLocaleString()}</p>
-              <div className="mt-2 text-gray-800">
-                <p><strong>Species:</strong> {upload.analysis.species}</p>
-                <p><strong>Breed:</strong> {upload.analysis.breed}</p>
-                <p><strong>Country:</strong> {upload.analysis.country}</p>
-                <p><strong>Habitat:</strong> {upload.analysis.habitat}</p>
-                <p><strong>Specifications:</strong> {upload.analysis.specifications}</p>
-                <p><strong>Common Problems:</strong> {upload.analysis.common_problems}</p>
-                <p><strong>Fun Facts:</strong> {upload.analysis.fun_facts}</p>
+              <div className="text-center mt-4">
+                <p className="text-xl font-semibold text-gray-800">{upload.analysis.species}</p>
               </div>
               <button
-                onClick={() => handleDelete(upload)}
-                className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete(upload);
+                }}
+                className="absolute top-4 right-4 text-red-500 hover:text-red-700"
                 aria-label="Delete"
               >
                 <FaTrash size={20} />
               </button>
-            </div>
+            </motion.div>
           ))
         ) : (
           <div className="col-span-full text-center text-gray-500">
             No uploads found. Upload an animal image to see it here.
           </div>
         )}
+      </div>
+
+      {/* Modal for displaying animal details */}
+      <div id="animal-modal" className="fixed z-50 inset-0 hidden bg-black bg-opacity-50 items-center justify-center">
+        <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-auto">
+          {selectedAnimal && (
+            <div>
+              <Image
+                src={selectedAnimal.imageUrl}
+                alt="Animal"
+                width={500}
+                height={400}
+                className="w-full h-64 object-cover rounded-t-lg"
+              />
+              <div className="p-6">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                  {selectedAnimal.analysis.species}
+                </h2>
+                <div className="space-y-2 text-gray-700">
+                  <p><strong>Breed:</strong> {selectedAnimal.analysis.breed}</p>
+                  <p><strong>Country:</strong> {selectedAnimal.analysis.country}</p>
+                  <p><strong>Habitat:</strong> {selectedAnimal.analysis.habitat}</p>
+                  <p><strong>Specifications:</strong> {selectedAnimal.analysis.specifications}</p>
+                  <p><strong>Common Problems:</strong> {selectedAnimal.analysis.common_problems}</p>
+                  <p><strong>Fun Facts:</strong> {selectedAnimal.analysis.fun_facts}</p>
+                </div>
+              </div>
+              <div className="p-4 border-t border-gray-200 flex justify-end">
+                <button
+                  onClick={closeModal}
+                  className="text-white bg-amber-600 hover:bg-amber-700 px-4 py-2 rounded-lg"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
