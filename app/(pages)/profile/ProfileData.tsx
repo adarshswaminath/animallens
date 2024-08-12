@@ -1,66 +1,78 @@
 import { useAuth } from "@/app/context/AuthContext";
 import Image from "next/image";
-import { FaUserAlt, FaEnvelope, FaPhone, FaCalendarAlt } from "react-icons/fa";
-import { FaUpload } from "react-icons/fa6";
+import { FaEnvelope, FaCalendarAlt, FaUpload } from "react-icons/fa";
 import { HiCheckBadge } from "react-icons/hi2";
 
-interface profileDataPropType {
-    totalUploads: number
+interface ProfileDataPropType {
+  totalUploads: number;
 }
 
-
-export default function ProfileData({totalUploads}:profileDataPropType) {
+export default function ProfileData({ totalUploads }: ProfileDataPropType) {
   const { user } = useAuth();
 
   return (
-    <div className="p-6 shadow-xl rounded-lg bg-white mt-4 mb-6">
-      <div className="flex items-center gap-4 mb-4">
-        <div className="h-12 w-2 bg-amber-600 rounded-full" />
-        <h3 className="text-3xl font-semibold">User Profile</h3>
-      </div>
-      <div className="flex flex-wrap items-center gap-6">
-        <Image
-          src={user?.photoURL || "/default-avatar.png"}
-          height={100}
-          width={100}
-          className="rounded-full border-2 border-gray-200"
-          alt="User profile image"
-        />
-        <div>
-          <h3 className="text-2xl font-semibold flex items-center gap-2">
-            {user?.displayName || "N/A"}
-          </h3>
-          <div className="flex flex-wrap gap-4">
-            <div className="text-lg border border-amber-600  text-gray-600 mt-2 p-2 rounded-xl">
-              <span className="flex items-center gap-3 text-xl font-bold">
-                {" "}
-                <FaEnvelope /> Email
-              </span>
-              <span>{user?.email || "N/A"}</span>
-            </div>
-
-            {/* second box */}
-            {user?.metadata?.creationTime && (
-              <div className="text-lg border border-amber-600  text-gray-600 mt-2 p-2 rounded-xl">
-                <span className="flex items-center gap-3 text-xl font-bold">
-                  <FaCalendarAlt />
-                  Account Created:{" "}
-                </span>
-                {new Date(user.metadata.creationTime).toLocaleDateString()}
-              </div>
-            )}
-            {/* third box */}
-            <div className="text-lg border border-amber-600  text-gray-600 mt-2 p-2 rounded-xl">
-             <span className="flex items-center gap-3 text-xl font-bold"> <HiCheckBadge/>  Email Verification</span>
-              <span>{user?.email || "N/A"}</span>
-            </div>
-            {/* fourth box */}
-            <div className="text-lg border border-amber-600  text-gray-600 mt-2 p-2 rounded-xl flex flex-col items-center">
-             <span className="flex items-center gap-3 text-xl font-bold"> <FaUpload/> Total Uploads</span>
-              <span className="etxt-center">{totalUploads || 0}</span>
-            </div>
+    <div className="bg-white rounded-xl shadow-lg p-8 max-w-4xl mx-auto">
+      <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
+        <div className="relative">
+          <Image
+            src={user?.photoURL || "/default-avatar.png"}
+            height={120}
+            width={120}
+            className="rounded-full border-4 border-amber-500"
+            alt="User profile image"
+          />
+          <div className="absolute bottom-0 right-0 bg-green-500 rounded-full p-1">
+            <HiCheckBadge className="text-white text-xl" />
           </div>
         </div>
+        <div className="flex-1">
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">
+            {user?.displayName || "N/A"}
+          </h2>
+          <p className="text-gray-600 mb-4">{user?.email || "N/A"}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <ProfileCard
+              icon={<FaEnvelope className="text-amber-500" />}
+              title="Email"
+              value={user?.email || "N/A"}
+            />
+            <ProfileCard
+              icon={<FaCalendarAlt className="text-amber-500" />}
+              title="Account Created"
+              value={user?.metadata?.creationTime
+                ? new Date(user.metadata.creationTime).toLocaleDateString()
+                : "N/A"}
+            />
+            <ProfileCard
+              icon={<HiCheckBadge className="text-amber-500" />}
+              title="Email Verification"
+              value={user?.emailVerified ? "Verified" : "Not Verified"}
+            />
+            <ProfileCard
+              icon={<FaUpload className="text-amber-500" />}
+              title="Total Uploads"
+              value={totalUploads.toString()}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface ProfileCardProps {
+  icon: React.ReactNode;
+  title: string;
+  value: string;
+}
+
+function ProfileCard({ icon, title, value }: ProfileCardProps) {
+  return (
+    <div className="bg-gray-50 rounded-lg p-4 flex items-center gap-4">
+      <div className="text-2xl">{icon}</div>
+      <div>
+        <h3 className="text-sm font-medium text-gray-500">{title}</h3>
+        <p className="text-lg font-semibold text-gray-800">{value}</p>
       </div>
     </div>
   );

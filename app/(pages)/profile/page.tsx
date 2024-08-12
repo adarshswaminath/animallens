@@ -1,13 +1,11 @@
 "use client";
-
 import React, { useEffect, useState } from 'react';
 import { useAuth } from "../../context/AuthContext";
 import { doc, getDoc, updateDoc, arrayRemove } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { FaTrash } from 'react-icons/fa';
-import ProfileData from './ProfileData';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import ProfileData from './ProfileData';
 
 interface AnimalUpload {
   imageUrl: string;
@@ -26,7 +24,7 @@ interface AnimalUpload {
 export default function Profile() {
   const { user } = useAuth();
   const [uploads, setUploads] = useState<AnimalUpload[]>([]);
-  const [selectedAnimal, setSelectedAnimal] = useState<AnimalUpload | null>(null);
+  const [selectedUpload, setSelectedUpload] = useState<AnimalUpload | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -52,103 +50,85 @@ export default function Profile() {
     setUploads(uploads.filter((item) => item !== upload));
   };
 
-  const openModal = (upload: AnimalUpload) => {
-    setSelectedAnimal(upload);
-    const modal = document.getElementById('animal-modal');
-    if (modal) {
-      modal.classList.remove('hidden');
-    }
-  };
-
-  const closeModal = () => {
-    setSelectedAnimal(null);
-    const modal = document.getElementById('animal-modal');
-    if (modal) {
-      modal.classList.add('hidden');
-    }
-  };
-
-  if (!user) return <div className="text-center text-gray-700">Please log in to view your profile.</div>;
+  if (!user) return <p className="text-center text-xl mt-8">Please log in to view your profile.</p>;
 
   return (
-    <div className="container mx-auto p-4 min-h-screen">
-      <ProfileData totalUploads={uploads?.length} />
-      <h1 className="text-4xl font-bold text-center mb-8 text-gray-800">Your Upload History</h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-        {uploads.length > 0 ? (
-          uploads.map((upload, index) => (
-            <motion.div
-              key={index}
-              className="relative p-4 border border-gray-200 rounded-lg shadow-lg bg-white hover:shadow-xl transition-shadow cursor-pointer"
-              whileHover={{ scale: 1.03 }}
-              onClick={() => openModal(upload)}
-            >
+    <div className="container mx-auto px-4 py-8 min-h-screen">
+      <div className="mb-12">
+      <ProfileData totalUploads={uploads?.length}/>
+      </div>
+      <h1 className="text-3xl font-bold mb-6">Your Animal Uploads</h1>
+      {uploads.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {uploads.map((upload, index) => (
+            <div key={index} className="relative bg-white rounded-lg shadow-md overflow-hidden">
               <Image
                 src={upload.imageUrl}
-                alt="Uploaded animal"
-                className="w-full h-48 object-cover rounded-md"
-                width={400}
+                alt={`Animal ${index + 1}`}
+                width={300}
                 height={300}
+                className="w-full h-48 object-cover cursor-pointer"
+                onClick={() => setSelectedUpload(upload)}
               />
-              <div className="text-center mt-4">
-                <p className="text-xl font-semibold text-gray-800">{upload.analysis.species}</p>
+              <div className="p-4">
+                <p className="text-sm text-gray-500 mb-2">{new Date(upload.timestamp).toLocaleString()}</p>
+                <p className="font-semibold">{upload.analysis.species}</p>
               </div>
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDelete(upload);
-                }}
-                className="absolute top-4 right-4 text-red-500 hover:text-red-700"
+                onClick={() => handleDelete(upload)}
+                className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
                 aria-label="Delete"
               >
-                <FaTrash size={20} />
+                <FaTrash />
               </button>
-            </motion.div>
-          ))
-        ) : (
-          <div className="col-span-full text-center text-gray-500">
-            No uploads found. Upload an animal image to see it here.
-          </div>
-        )}
-      </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-center text-xl mt-8">No uploads found. Upload an animal image to see it here.</p>
+      )}
 
-      {/* Modal for displaying animal details */}
-      <div id="animal-modal" className="fixed z-50 inset-0 hidden bg-black bg-opacity-50 items-center justify-center">
-        <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-auto">
-          {selectedAnimal && (
-            <div>
-              <Image
-                src={selectedAnimal.imageUrl}
-                alt="Animal"
-                width={500}
-                height={400}
-                className="w-full h-64 object-cover rounded-t-lg"
-              />
-              <div className="p-6">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                  {selectedAnimal.analysis.species}
-                </h2>
-                <div className="space-y-2 text-gray-700">
-                  <p><strong>Breed:</strong> {selectedAnimal.analysis.breed}</p>
-                  <p><strong>Country:</strong> {selectedAnimal.analysis.country}</p>
-                  <p><strong>Habitat:</strong> {selectedAnimal.analysis.habitat}</p>
-                  <p><strong>Specifications:</strong> {selectedAnimal.analysis.specifications}</p>
-                  <p><strong>Common Problems:</strong> {selectedAnimal.analysis.common_problems}</p>
-                  <p><strong>Fun Facts:</strong> {selectedAnimal.analysis.fun_facts}</p>
-                </div>
-              </div>
-              <div className="p-4 border-t border-gray-200 flex justify-end">
+      {selectedUpload && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold">{selectedUpload.analysis.species}</h2>
                 <button
-                  onClick={closeModal}
-                  className="text-white bg-amber-600 hover:bg-amber-700 px-4 py-2 rounded-lg"
+                  onClick={() => setSelectedUpload(null)}
+                  className="text-gray-500 hover:text-gray-700"
                 >
-                  Close
+                  ✕
                 </button>
               </div>
+              <Image
+                src={selectedUpload.imageUrl}
+                alt={selectedUpload.analysis.species}
+                width={600}
+                height={400}
+                className="w-full h-64 object-cover rounded-lg mb-4"
+              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <DetailItem label="Breed" value={selectedUpload.analysis.breed} />
+                <DetailItem label="Country" value={selectedUpload.analysis.country} />
+                <DetailItem label="Habitat" value={selectedUpload.analysis.habitat} />
+                <DetailItem label="Specifications" value={selectedUpload.analysis.specifications} />
+                <DetailItem label="Common Problems" value={selectedUpload.analysis.common_problems} />
+                <DetailItem label="Fun Facts" value={selectedUpload.analysis.fun_facts} />
+              </div>
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
+    </div>
+  );
+}
+
+function DetailItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="font-semibold text-gray-700">{label}</p>
+      <p className="text-gray-600">{value}</p>
     </div>
   );
 }
