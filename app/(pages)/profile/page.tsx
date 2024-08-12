@@ -27,14 +27,15 @@ export default function Profile() {
   useEffect(() => {
     if (user) {
       fetchUploads();
-      console.log(uploads)
+
     }
-  }, [user]);
+  }, []);
 
   const fetchUploads = async () => {
     if (!user) return;
     const userDocRef = doc(db, 'users', user.uid);
     const userDoc = await getDoc(userDocRef);
+    console.log(userDoc)
     if (userDoc.exists()) {
       setUploads(userDoc.data().animalUploads || []);
     }
@@ -46,6 +47,7 @@ export default function Profile() {
     await updateDoc(userDocRef, {
       animalUploads: arrayRemove(upload),
     });
+    console.log(uploads)
     setUploads(uploads.filter((item) => item !== upload));
   };
 
