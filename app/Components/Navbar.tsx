@@ -6,6 +6,7 @@ import Link from "next/link";
 import { signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut } from "firebase/auth";
 import { auth } from "../firebase/config";
 import { useAuth } from "../context/AuthContext";
+import Image from "next/image";
 
 export default function Navbar() {
   const { user } = useAuth();
@@ -73,7 +74,9 @@ export default function Navbar() {
                 className="btn btn-ghost btn-circle "
               >
                 <div className="w-auto rounded-full btn bg-[#FEFAF8]">
-                  <img
+                  <Image
+                  height={100}
+                  width={100}
                     alt="User Avatar"
                     src={user.photoURL || "/default-avatar.png"}
                     className="h-8 w-8 rounded-full"
