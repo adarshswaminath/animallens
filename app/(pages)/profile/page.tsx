@@ -1,11 +1,11 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { doc, getDoc, updateDoc, arrayRemove } from 'firebase/firestore';
-import { db } from '../../firebase/config';
-import { FaTrash } from 'react-icons/fa';
-import Image from 'next/image';
-import ProfileData from './ProfileData';
+import { doc, getDoc, updateDoc, arrayRemove, query, where, getDocs, deleteDoc, collection } from "firebase/firestore";
+import { db } from "../../firebase/config";
+import { FaTrash } from "react-icons/fa";
+import Image from "next/image";
+import ProfileData from "./ProfileData";
 
 interface AnimalUpload {
   imageUrl: string;
@@ -34,7 +34,7 @@ export default function Profile() {
 
   const fetchUploads = async () => {
     if (!user) return;
-    const userDocRef = doc(db, 'users', user.uid);
+    const userDocRef = doc(db, "users", user.uid);
     const userDoc = await getDoc(userDocRef);
     if (userDoc.exists()) {
       setUploads(userDoc.data().animalUploads || []);
@@ -43,25 +43,43 @@ export default function Profile() {
 
   const handleDelete = async (upload: AnimalUpload) => {
     if (!user) return;
-    const userDocRef = doc(db, 'users', user.uid);
+    const userDocRef = doc(db, "users", user.uid);
     await updateDoc(userDocRef, {
       animalUploads: arrayRemove(upload),
+    });
+    // Remove from public collection
+    const animalUploadsCollection = collection(db, "animalUploads");
+    const q = query(
+      animalUploadsCollection,
+      where("imageUrl", "==", upload.imageUrl)
+    );
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach(async (doc) => {
+      await deleteDoc(doc.ref);
     });
     setUploads(uploads.filter((item) => item !== upload));
   };
 
-  if (!user) return <p className="text-center text-xl mt-8">Please log in to view your profile.</p>;
+  if (!user)
+    return (
+      <p className="text-center text-xl mt-8">
+        Please log in to view your profile.
+      </p>
+    );
 
   return (
     <div className="container mx-auto px-4 py-8 min-h-screen">
       <div className="mb-12">
-      <ProfileData totalUploads={uploads?.length}/>
+        <ProfileData totalUploads={uploads?.length} />
       </div>
       <h1 className="text-3xl font-bold mb-6">Your Animal Uploads</h1>
       {uploads.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {uploads.map((upload, index) => (
-            <div key={index} className="relative bg-white rounded-lg shadow-md overflow-hidden">
+            <div
+              key={index}
+              className="relative bg-white rounded-lg shadow-md overflow-hidden"
+            >
               <Image
                 src={upload.imageUrl}
                 alt={`Animal ${index + 1}`}
@@ -71,7 +89,9 @@ export default function Profile() {
                 onClick={() => setSelectedUpload(upload)}
               />
               <div className="p-4">
-                <p className="text-sm text-gray-500 mb-2">{new Date(upload.timestamp).toLocaleString()}</p>
+                <p className="text-sm text-gray-500 mb-2">
+                  {new Date(upload.timestamp).toLocaleString()}
+                </p>
                 <p className="font-semibold">{upload.analysis.species}</p>
               </div>
               <button
@@ -85,7 +105,9 @@ export default function Profile() {
           ))}
         </div>
       ) : (
-        <p className="text-center text-xl mt-8">No uploads found. Upload an animal image to see it here.</p>
+        <p className="text-center text-xl mt-8">
+          No uploads found. Upload an animal image to see it here.
+        </p>
       )}
 
       {selectedUpload && (
@@ -93,7 +115,9 @@ export default function Profile() {
           <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold">{selectedUpload.analysis.species}</h2>
+                <h2 className="text-2xl font-bold">
+                  {selectedUpload.analysis.species}
+                </h2>
                 <button
                   onClick={() => setSelectedUpload(null)}
                   className="text-gray-500 hover:text-gray-700"
@@ -109,12 +133,30 @@ export default function Profile() {
                 className="w-full h-64 object-cover rounded-lg mb-4"
               />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <DetailItem label="Breed" value={selectedUpload.analysis.breed} />
-                <DetailItem label="Country" value={selectedUpload.analysis.country} />
-                <DetailItem label="Habitat" value={selectedUpload.analysis.habitat} />
-                <DetailItem label="Specifications" value={selectedUpload.analysis.specifications} />
-                <DetailItem label="Common Problems" value={selectedUpload.analysis.common_problems} />
-                <DetailItem label="Fun Facts" value={selectedUpload.analysis.fun_facts} />
+                <DetailItem
+                  label="Breed"
+                  value={selectedUpload.analysis.breed}
+                />
+                <DetailItem
+                  label="Country"
+                  value={selectedUpload.analysis.country}
+                />
+                <DetailItem
+                  label="Habitat"
+                  value={selectedUpload.analysis.habitat}
+                />
+                <DetailItem
+                  label="Specifications"
+                  value={selectedUpload.analysis.specifications}
+                />
+                <DetailItem
+                  label="Common Problems"
+                  value={selectedUpload.analysis.common_problems}
+                />
+                <DetailItem
+                  label="Fun Facts"
+                  value={selectedUpload.analysis.fun_facts}
+                />
               </div>
             </div>
           </div>

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useRouter } from "next/navigation";
-import { doc, setDoc, arrayUnion } from "firebase/firestore";
+import { doc, setDoc, arrayUnion, addDoc, collection } from "firebase/firestore";
 import { db } from "../../firebase/config";
 import { FiUpload, FiCamera } from "react-icons/fi";
 import {
@@ -23,6 +23,8 @@ interface AnimalAnalysis {
   common_problems: string;
   fun_facts: string;
 }
+
+const animalUploadsCollection = collection(db, 'animalUploads');
 
 export default function ImageUpload() {
   const { user } = useAuth();
@@ -79,7 +81,15 @@ export default function ImageUpload() {
           setError("Please upload a valid animal image.");
           setAnalysis(null);
         } else {
-          await storeAnalysisInFirebase(preview!, parsedAnalysis);
+          const uploadData = {
+            imageUrl: preview!,
+            analysis: parsedAnalysis,
+            timestamp: new Date().toISOString(),
+            userId: user.uid,
+          };
+    
+          await addDoc(animalUploadsCollection, uploadData);
+          await storeAnalysisInFirebase(uploadData);
           setAnalysis(parsedAnalysis);
           setError(null);
         }
@@ -93,20 +103,13 @@ export default function ImageUpload() {
     setLoading(false);
   };
 
-  const storeAnalysisInFirebase = async (
-    imageUrl: string,
-    analysis: AnimalAnalysis
-  ) => {
+  const storeAnalysisInFirebase = async (uploadData: any) => {
     if (!user) return;
     const userDocRef = doc(db, "users", user.uid);
     await setDoc(
       userDocRef,
       {
-        animalUploads: arrayUnion({
-          imageUrl,
-          analysis,
-          timestamp: new Date().toISOString(),
-        }),
+        animalUploads: arrayUnion(uploadData),
       },
       { merge: true }
     );
