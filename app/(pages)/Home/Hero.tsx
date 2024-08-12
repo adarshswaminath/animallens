@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import Link from "next/link"
 import { motion } from "framer-motion";
 
 export default function Hero() {
@@ -67,6 +68,7 @@ const HeroTextBanner = () => {
           wildlife around you. Snap, upload, and explore the animal kingdom with
           AnimalLens!
         </motion.p>
+        <Link href="/image-upload">
         <motion.button
           className="bg-[#fdbe7f] shadow text-white font-semibold py-3 px-6 rounded-lg transition duration-300 hover:bg-[#fca54d]"
           whileHover={{ scale: 1.05, boxShadow: "0 5px 15px rgba(0,0,0,0.1)" }}
@@ -82,6 +84,7 @@ const HeroTextBanner = () => {
         >
           Get Started
         </motion.button>
+        </Link>
       </motion.div>
     </div>
   );
