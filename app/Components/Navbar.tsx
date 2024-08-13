@@ -37,6 +37,9 @@ export default function Navbar() {
         <Link href="/image-upload">Upload</Link>
       </li>
       <li className="p-2">
+        <Link href="/feed">Feed</Link>
+      </li>
+      <li className="p-2">
         <Link href="/profile">Profile</Link>
       </li>
       <li className="p-2">

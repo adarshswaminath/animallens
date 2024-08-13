@@ -62,7 +62,7 @@ export default function Profile() {
 
   if (!user)
     return (
-      <p className="text-center text-xl mt-8">
+      <p className="text-center text-xl mt-8 min-h-screen">
         Please log in to view your profile.
       </p>
     );
