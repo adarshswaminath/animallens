@@ -3,8 +3,10 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useRouter } from "next/navigation";
 import { doc, setDoc, arrayUnion, addDoc, collection } from "firebase/firestore";
-import { db } from "../../firebase/config";
+import { db, storage } from "../../firebase/config";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { FiUpload, FiCamera } from "react-icons/fi";
+
 import {
   FaDog,
   FaGlobeAmericas,
@@ -54,19 +56,34 @@ export default function ImageUpload() {
     setLoading(true);
     setError(null);
     try {
-      const formData = new FormData();
-      formData.append("file", image);
-      const response = await fetch("/api/upload", {
+      // 1. Upload image to Firebase Storage
+      const storageRef = ref(storage, `animal_images/${user.uid}/${Date.now()}-${image.name}`);
+      await uploadBytes(storageRef, image);
+      const downloadURL = await getDownloadURL(storageRef);
+  
+      // 2. Convert image to base64
+      const base64Image = await convertToBase64(image);
+  
+      // 3. Send base64 image data to API for analysis
+      const response = await fetch("/api/analyze", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ 
+          imageData: base64Image,
+          mimeType: image.type
+        }),
       });
       const result = await response.json();
+  
       if (result.success) {
+        // 4. Process the analysis result
         let analysisData = result.message;
         analysisData = analysisData.replace(/```json|```/g, "").trim();
         const parsedAnalysis: AnimalAnalysis = JSON.parse(analysisData);
   
-        // Improved check for invalid or empty responses
+        // 5. Validate the response
         const isInvalidResponse = Object.values(parsedAnalysis).every((value) => 
           typeof value === 'string' && 
           (value.trim().toLowerCase() === 'n/a' || 
@@ -81,26 +98,40 @@ export default function ImageUpload() {
           setError("Please upload a valid animal image.");
           setAnalysis(null);
         } else {
+          // 6. Prepare upload data
           const uploadData = {
-            imageUrl: preview!,
+            imageUrl: downloadURL,
             analysis: parsedAnalysis,
             timestamp: new Date().toISOString(),
             userId: user.uid,
           };
-    
+  
+          // 7. Store data in Firestore
           await addDoc(animalUploadsCollection, uploadData);
           await storeAnalysisInFirebase(uploadData);
+          
+          // 8. Update state with analysis results
           setAnalysis(parsedAnalysis);
           setError(null);
         }
       } else {
-        setError(result.message || "Upload failed");
+        setError(result.message || "Analysis failed");
       }
     } catch (error) {
-      setError("Error uploading image. Please try again.");
-      console.error("Error uploading image:", error);
+      setError("Error processing image. Please try again.");
+      console.error("Error processing image:", error);
     }
     setLoading(false);
+  };
+  
+  // Helper function to convert File to base64
+  const convertToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
   };
 
   const storeAnalysisInFirebase = async (uploadData: any) => {
