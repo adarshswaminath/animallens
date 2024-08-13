@@ -18,7 +18,7 @@ export default function Hero() {
         <Image
           src="/dog.jpg"
           alt="a smilling dog"
-          className="relative bottom-16 left-20 lg:left-48 h-48 object-cover rounded-xl border-4 border-amber-500"
+          className="relative bottom-10 lg:bottom-16 left-8 lg:left-48 h-48 object-cover rounded-xl border-4 border-amber-500"
           width={250}
           height={200}
         />

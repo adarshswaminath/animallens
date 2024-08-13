@@ -64,9 +64,9 @@ export default function Navbar() {
 
   return (
     <div>
-      <div className="navbar px-16">
+      <div className="navbar justify-between lg:px-16">
         <div className="flex-1">
-          <Link href="/" className=" text-6xl font-whisper">AnimalLens</Link>
+          <Link href="/" className="text-3xl lg:text-6xl font-whisper">AnimalLens</Link>
         </div>
         <div className="flex-none">
           {user ? (
@@ -76,7 +76,7 @@ export default function Navbar() {
                 role="button"
                 className="btn btn-ghost btn-circle "
               >
-                <div className="w-auto rounded-full btn bg-[#FEFAF8]">
+                <div className=" rounded-full lg:btn lg:bg-[#FEFAF8] ">
                   <Image
                   height={100}
                   width={100}
@@ -84,7 +84,7 @@ export default function Navbar() {
                     src={user.photoURL || "/default-avatar.png"}
                     className="h-8 w-8 rounded-full"
                   />
-                  <span>{user.displayName}</span>
+                  <span className="hidden lg:block">{user.displayName}</span>
                
                 </div>
               </div>

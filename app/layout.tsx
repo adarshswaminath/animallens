@@ -31,7 +31,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" data-theme="light" className={`${sourceCodePro.variable} ${whisper.variable}`}>
-      <body className={`${inter.className} bg-gradient-to-br from-[#FEFAF8] to-[#FFE7CF]`}>
+      <body className={`${inter.className} bg-gradient-to-br from-[#FEFAF8] to-[#FFE7CF] overflow-x-hidden`}>
         <AuthProvider>
           <Navbar />
           {children}
