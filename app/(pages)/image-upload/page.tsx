@@ -2,7 +2,13 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useRouter } from "next/navigation";
-import { doc, setDoc, arrayUnion, addDoc, collection } from "firebase/firestore";
+import {
+  doc,
+  setDoc,
+  arrayUnion,
+  addDoc,
+  collection,
+} from "firebase/firestore";
 import { db, storage } from "../../firebase/config";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { FiUpload, FiCamera } from "react-icons/fi";
@@ -26,7 +32,7 @@ interface AnimalAnalysis {
   fun_facts: string;
 }
 
-const animalUploadsCollection = collection(db, 'animalUploads');
+const animalUploadsCollection = collection(db, "animalUploads");
 
 export default function ImageUpload() {
   const { user } = useAuth();
@@ -45,6 +51,21 @@ export default function ImageUpload() {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      // Allowed file types
+      const allowedTypes = ["image/png", "image/jpeg", "image/jpg"];
+      if (!allowedTypes.includes(file.type)) {
+        setError("Please upload a valid image file (PNG, JPG, JPEG)");
+        setImage(null);
+        setPreview(null);
+        return;
+      }
+      if (file.size > 1028576) {
+        setError("File size should be less than 1MB");
+        setImage(null);
+        setPreview(null);
+        return;
+      }
       setImage(e.target.files[0]);
       setPreview(URL.createObjectURL(e.target.files[0]));
       setError(null);
@@ -57,43 +78,47 @@ export default function ImageUpload() {
     setError(null);
     try {
       // 1. Upload image to Firebase Storage
-      const storageRef = ref(storage, `animal_images/${user.uid}/${Date.now()}-${image.name}`);
+      const storageRef = ref(
+        storage,
+        `animal_images/${user.uid}/${Date.now()}-${image.name}`
+      );
       await uploadBytes(storageRef, image);
       const downloadURL = await getDownloadURL(storageRef);
-  
+
       // 2. Convert image to base64
       const base64Image = await convertToBase64(image);
-  
+
       // 3. Send base64 image data to API for analysis
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           imageData: base64Image,
-          mimeType: image.type
+          mimeType: image.type,
         }),
       });
       const result = await response.json();
-  
+
       if (result.success) {
         // 4. Process the analysis result
         let analysisData = result.message;
         analysisData = analysisData.replace(/```json|```/g, "").trim();
         const parsedAnalysis: AnimalAnalysis = JSON.parse(analysisData);
-  
+
         // 5. Validate the response
-        const isInvalidResponse = Object.values(parsedAnalysis).every((value) => 
-          typeof value === 'string' && 
-          (value.trim().toLowerCase() === 'n/a' || 
-           value.trim().toLowerCase() === 'none' ||
-           value.trim() === '')
+        const isInvalidResponse = Object.values(parsedAnalysis).every(
+          (value) =>
+            typeof value === "string" &&
+            (value.trim().toLowerCase() === "n/a" ||
+              value.trim().toLowerCase() === "none" ||
+              value.trim() === "")
         );
-  
+
         console.log("Parsed Analysis:", parsedAnalysis);
         console.log("Is Invalid Response:", isInvalidResponse);
-  
+
         if (isInvalidResponse) {
           setError("Please upload a valid animal image.");
           setAnalysis(null);
@@ -105,11 +130,11 @@ export default function ImageUpload() {
             timestamp: new Date().toISOString(),
             userId: user.uid,
           };
-  
+
           // 7. Store data in Firestore
           await addDoc(animalUploadsCollection, uploadData);
           await storeAnalysisInFirebase(uploadData);
-          
+
           // 8. Update state with analysis results
           setAnalysis(parsedAnalysis);
           setError(null);
@@ -118,12 +143,12 @@ export default function ImageUpload() {
         setError(result.message || "Analysis failed");
       }
     } catch (error) {
-      setError("Error processing image. Please try again.");
+      setError("Error processing image. Please try again with another image.");
       console.error("Error processing image:", error);
     }
     setLoading(false);
   };
-  
+
   // Helper function to convert File to base64
   const convertToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -175,7 +200,10 @@ export default function ImageUpload() {
                     </span>{" "}
                     or drag and drop
                   </p>
-                  <p className="text-sm text-gray-900">PNG, JPG, or JPEG</p>
+                  <p className="text-sm text-gray-600">PNG, JPG, or JPEG</p>
+                  <p className="text-sm mt-3 text-gray-900">
+                    File size should be less than 1MB
+                  </p>
                 </div>
               )}
               <input
@@ -183,7 +211,7 @@ export default function ImageUpload() {
                 type="file"
                 className="hidden"
                 onChange={handleImageChange}
-                accept="image/*"
+                accept="image/png, image/jpeg, image/jpg"
               />
             </label>
           </div>
@@ -191,9 +219,9 @@ export default function ImageUpload() {
           <button
             onClick={handleUpload}
             disabled={!image || loading}
-            className={`w-full py-4 px-6 flex items-center justify-center text-white rounded-xl transition-all duration-300 ${
+            className={`w-full py-4 px-6 flex items-center justify-center  rounded-xl transition-all duration-300 ${
               !image || loading
-                ? "bg-gray-900 cursor-not-allowed"
+                ? "bg-gray-900 cursor-not-allowed text-white"
                 : "bg-[#FFE7CF] hover:bg-[#FFD7AF] shadow-md hover:shadow-lg text-gray-900"
             }`}
           >
